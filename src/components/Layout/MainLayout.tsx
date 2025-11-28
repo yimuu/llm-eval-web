@@ -1,4 +1,4 @@
-import { Layout, Menu, Avatar, Dropdown } from 'antd';
+import { Layout, Menu, Avatar, Dropdown, Tag } from 'antd';
 import {
   DashboardOutlined,
   ExperimentOutlined,
@@ -108,7 +108,7 @@ export default function MainLayout() {
       <Layout>
         <Header className="bg-white px-6 flex justify-between items-center shadow-sm">
           <div className="text-lg font-semibold">模型评测系统</div>
-          
+
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
             <div className="flex items-center cursor-pointer">
               <Avatar icon={<UserOutlined />} />
