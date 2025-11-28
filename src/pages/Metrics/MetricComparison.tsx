@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Card, Select, Button, Table, Space, Tag, Empty } from 'antd';
+import { Card, Select, Button, Table, Tag, Empty } from 'antd';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import { evaluationApi } from '@/api/evaluation';
-import { CompareOutlined } from '@ant-design/icons';
+import { DiffOutlined } from '@ant-design/icons';
 
 const COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1'];
 
@@ -34,7 +34,7 @@ export default function MetricComparison() {
 
     return Array.from(metricNames).map(metricName => {
       const point: any = { metric: metricName };
-      Object.entries(comparison).forEach(([runId, run]: [string, any]) => {
+      Object.entries(comparison).forEach(([_, run]: [string, any]) => {
         point[run.model_version] = run.metrics[metricName] || 0;
       });
       return point;
@@ -44,11 +44,11 @@ export default function MetricComparison() {
   // 雷达图数据
   const getRadarData = () => {
     if (!comparison) return [];
-    
+
     const mainMetrics = ['accuracy', 'precision', 'recall', 'f1_score'];
     return mainMetrics.map(metric => {
       const point: any = { metric };
-      Object.entries(comparison).forEach(([runId, run]: [string, any]) => {
+      Object.entries(comparison).forEach(([_, run]: [string, any]) => {
         point[run.model_version] = run.metrics[metric] || 0;
       });
       return point;
@@ -147,7 +147,7 @@ export default function MetricComparison() {
           </div>
           <Button
             type="primary"
-            icon={<CompareOutlined />}
+            icon={<DiffOutlined />}
             disabled={selectedRuns.length < 2}
           >
             开始对比
