@@ -3,19 +3,39 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import type { Metric } from '@/types/evaluation';
 
 interface MetricChartProps {
-  data: Metric[];
+  data: Metric[] | any;
 }
 
 export default function MetricChart({ data }: MetricChartProps) {
+  // Handle if data is not an array (e.g., object from API)
+  let metricsArray: Metric[];
+
+  if (!data) {
+    return <div>暂无指标数据</div>;
+  }
+
+  // Convert object format to array format if needed
+  if (Array.isArray(data)) {
+    metricsArray = data;
+  } else {
+    // Convert object like {accuracy: 0.95, precision: 0.92} to array format
+    metricsArray = Object.entries(data as any)
+      .filter(([key]) => typeof (data as any)[key] === 'number')
+      .map(([key, value]) => ({
+        metric_name: key,
+        metric_value: value as number,
+      })) as Metric[];
+  }
+
   // 转换数据格式
-  const chartData = data.map(metric => ({
+  const chartData = metricsArray.map(metric => ({
     name: metric.metric_name,
     value: metric.metric_value,
   }));
 
   // 主要指标卡片
-  const mainMetrics = data.filter(m => 
-    ['accuracy', 'precision', 'recall', 'f1_score'].includes(m.metric_name)
+  const mainMetrics = metricsArray.filter(m =>
+    ['accuracy', 'precision', 'recall', 'f1_score', 'f1Score'].includes(m.metric_name)
   );
 
   const metricLabels: Record<string, string> = {
@@ -23,6 +43,7 @@ export default function MetricChart({ data }: MetricChartProps) {
     precision: '精确率',
     recall: '召回率',
     f1_score: 'F1分数',
+    f1Score: 'F1分数',
     average_score: '平均分',
     pass_rate: '通过率',
   };
@@ -39,9 +60,9 @@ export default function MetricChart({ data }: MetricChartProps) {
                 value={metric.metric_value}
                 precision={4}
                 suffix={metric.metric_value <= 1 ? '' : ''}
-                valueStyle={{ 
-                  color: metric.metric_value > 0.8 ? '#3f8600' : 
-                         metric.metric_value > 0.6 ? '#faad14' : '#cf1322' 
+                valueStyle={{
+                  color: metric.metric_value > 0.8 ? '#3f8600' :
+                    metric.metric_value > 0.6 ? '#faad14' : '#cf1322'
                 }}
               />
             </Card>

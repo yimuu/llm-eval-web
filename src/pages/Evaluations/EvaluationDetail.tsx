@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, Descriptions, Progress, Tag, Table, Tabs } from 'antd';
 import { useEvaluationDetail, useEvaluationProgress, useMetrics } from '@/hooks/useEvaluation';
@@ -12,7 +13,7 @@ export default function EvaluationDetail() {
   const { data: evaluation } = useEvaluationDetail(runId);
   const { data: progress, refetch } = useEvaluationProgress(runId, false);
   const { data: metrics } = useMetrics(runId);
-  
+
   // WebSocket 实时更新
   const { data: wsData } = useWebSocket(
     evaluation?.status === 'running' ? runId : null
@@ -27,6 +28,9 @@ export default function EvaluationDetail() {
 
   if (!evaluation) return <div>Loading...</div>;
 
+  // Ensure results is always an array
+  const resultsData = Array.isArray(progress?.results) ? progress.results : [];
+
   const resultColumns = [
     {
       title: '数据ID',
@@ -38,13 +42,13 @@ export default function EvaluationDetail() {
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => {
-        const colors = {
+        const colors: Record<string, string> = {
           pending: 'default',
           running: 'processing',
           completed: 'success',
           failed: 'error',
         };
-        return <Tag color={colors[status]}>{status}</Tag>;
+        return <Tag color={colors[status] || 'default'}>{status}</Tag>;
       },
     },
     {
@@ -88,8 +92,8 @@ export default function EvaluationDetail() {
           <Descriptions.Item label="状态">
             <Tag color={
               evaluation.status === 'completed' ? 'success' :
-              evaluation.status === 'running' ? 'processing' :
-              evaluation.status === 'failed' ? 'error' : 'default'
+                evaluation.status === 'running' ? 'processing' :
+                  evaluation.status === 'failed' ? 'error' : 'default'
             }>
               {evaluation.status}
             </Tag>
@@ -106,8 +110,8 @@ export default function EvaluationDetail() {
             status={evaluation.status === 'failed' ? 'exception' : undefined}
           />
           <div className="text-sm text-gray-500 mt-2">
-            完成: {evaluation.completed_count} / {evaluation.total_count}
-            {evaluation.failed_count > 0 && ` | 失败: ${evaluation.failed_count}`}
+            完成: {evaluation.completed_count || 0} / {evaluation.total_count || 0}
+            {(evaluation.failed_count || 0) > 0 && ` | 失败: ${evaluation.failed_count}`}
           </div>
         </div>
       </Card>
@@ -122,7 +126,7 @@ export default function EvaluationDetail() {
               children: (
                 <Table
                   columns={resultColumns}
-                  dataSource={progress?.results || []}
+                  dataSource={resultsData}
                   rowKey="id"
                   pagination={{ pageSize: 20 }}
                 />

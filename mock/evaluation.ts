@@ -47,8 +47,15 @@ export default [
         response: ({ query }: any) => {
             const evaluation = evaluations.find(e => e.id === parseInt(query.id));
             if (evaluation) {
+                const totalCount = Random.integer(50, 100);
+                const completedCount = Math.floor(totalCount * (evaluation.progress_percent / 100));
+                const failedCount = Random.integer(0, 5);
+
                 return {
                     ...evaluation,
+                    total_count: totalCount,
+                    completed_count: completedCount,
+                    failed_count: failedCount,
                     metrics: {
                         accuracy: Random.float(0.75, 0.98, 2, 2),
                         precision: Random.float(0.75, 0.98, 2, 2),
@@ -78,6 +85,48 @@ export default [
             return newEvaluation;
         },
     },
+
+    // 获取评测进度
+    {
+        url: '/api/v1/evaluations/runs/:id/progress',
+        method: 'get',
+        response: ({ query }: any) => {
+            const id = parseInt(query.id);
+            const evaluation = evaluations.find(e => e.id === id);
+
+            if (!evaluation) {
+                return { code: 404, message: '评测任务不存在' };
+            }
+
+            const totalCount = Random.integer(50, 100);
+            const completedCount = Math.floor(totalCount * (evaluation.progress_percent / 100));
+            const failedCount = Random.integer(0, 5);
+            const pendingCount = totalCount - completedCount - failedCount;
+
+            // Generate mock results
+            const results = Array.from({ length: 20 }, (_, index) => ({
+                id: index + 1,
+                dataset_id: Random.integer(1, 100),
+                status: Random.pick(['pending', 'running', 'completed', 'failed']),
+                model_output: index % 3 === 0 ? { text: Random.sentence() } : null,
+                evaluation_result: index % 2 === 0 ? { is_correct: Random.boolean() } : null,
+                error_message: index % 10 === 0 ? 'API timeout' : null,
+                execution_time: Random.integer(100, 3000),
+            }));
+
+            return {
+                run_id: id,
+                status: evaluation.status,
+                total_count: totalCount,
+                completed_count: completedCount,
+                failed_count: failedCount,
+                pending_count: pendingCount,
+                progress_percent: evaluation.progress_percent,
+                results: results,
+            };
+        },
+    },
+
 
     // 删除评测任务
     {
